@@ -68,7 +68,7 @@
         .timer {
             position: absolute;
             top: 24px;
-            right: 24px;
+           right: 80px;
             background: rgba(255, 255, 255, 0.25);
             padding: 10px 20px;
             border-radius: 25px;
@@ -586,7 +586,7 @@
                 display: inline-block;
                 margin-right: 12px;
             }
-
+			
             .voice-controls {
                 position: static;
                 margin-top: 12px;
@@ -617,6 +617,7 @@
                 margin: 0 2px;
             }
         }
+	
     </style>
 </head>
 <body>
@@ -625,22 +626,23 @@
             <div class="audio-controls" id="audioToggle" onclick="toggleAudio()" title="Toggle audio responses">
                 🔊
             </div>
+			<button class="back-btn" id="backBtn" onclick="goBackToCategories()">← Back</button>
             <div class="voice-controls" id="voiceControls">
                 <select id="voiceSelect" onchange="testSelectedVoice()">
                     <option value="">Select AI Voice...</option>
                 </select>
                 <button id="testVoiceBtn" onclick="testSelectedVoice()">Test</button>
             </div>
-            <h1>AI Technical Interview</h1>
-            <p>Professional mock interview with expert-level technical questions</p>
+            <h1>AI-Powered Mock Interview</h1>
+            <p>Professional mock interview & Get Personalized Feedback</p>
             <div class="timer" id="timer"></div>
         </div>
         
         <div class="chat-messages" id="chatMessages">
             <div class="interview-intro">
-                <h3>📋 Ready for Your Technical Interview?</h3>
-                <p>Upload your resume and select your preferred interview type. I'll conduct a professional interview with specific questions tailored to your experience and chosen format.</p>
-            </div>
+              <h3><strong>Practice today, conquer tomorrow.</strong></h3>
+               <p>Upload your resume and/or job description, then choose the type of interview practice you need.<br>You can end any interview by typing "END" or when the timer ends.</p>
+			</div>
             
             <div class="upload-section" id="uploadSection">
                 <div class="file-input-group">
@@ -733,8 +735,7 @@
         
         // Speech recognition variables
         let isRecording = false;
-        let mediaRecorder = null;
-        let audioChunks = [];
+      
         let candidateEmail = "";
         
         // Audio response variables
@@ -842,7 +843,8 @@
                 window.speechSynthesis.speak(utterance);
             }
         }
-        
+
+		
         function addMessage(content, isUser = false, hasAudio = false) {
             const messagesDiv = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
@@ -928,69 +930,7 @@
             }
         }
 
-        function playAudioResponse(textToSpeak, messageElement = null) {
-            if (!audioEnabled || !textToSpeak) return;
-            
-            try {
-                // Stop any currently playing speech
-                if (window.speechSynthesis.speaking) {
-                    window.speechSynthesis.cancel();
-                    // Remove speaking animation from all messages
-                    document.querySelectorAll('.message.ai.speaking').forEach(msg => {
-                        msg.classList.remove('speaking');
-                    });
-                }
-                
-                // Create speech synthesis utterance
-                const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                
-                // Use selected voice or fallback to default
-                if (selectedVoice) {
-                    utterance.voice = selectedVoice;
-                } else {
-                    const voices = window.speechSynthesis.getVoices();
-                    const preferredVoice = voices.find(voice => 
-                        voice.lang === 'en-US' && voice.name.includes('Microsoft') 
-                    ) || voices.find(voice => 
-                        voice.lang.startsWith('en')
-                    ) || voices[0];
-                    
-                    if (preferredVoice) {
-                        utterance.voice = preferredVoice;
-                    }
-                }
-                
-                // Configure voice settings
-                utterance.rate = 0.9; // Slightly slower for clarity
-                utterance.pitch = 1.0;
-                utterance.volume = 1.0;
-                
-                // Add speaking animation to message
-                if (messageElement) {
-                    messageElement.classList.add('speaking');
-                }
-                
-                // Event handlers
-                utterance.onend = () => {
-                    if (messageElement) {
-                        messageElement.classList.remove('speaking');
-                    }
-                };
-                
-                utterance.onerror = (event) => {
-                    console.error('Speech synthesis error:', event);
-                    if (messageElement) {
-                        messageElement.classList.remove('speaking');
-                    }
-                };
-                
-                // Speak the text
-                window.speechSynthesis.speak(utterance);
-                
-            } catch (error) {
-                console.error('Error with speech synthesis:', error);
-            }
-        }
+      
         
         // Convert file to base64
         function fileToBase64(file) {
@@ -1108,11 +1048,75 @@
                 startBtn.textContent = '🚀 Begin Interview';
             }
         }
-        
+
+		  function goBackToCategories() {
+            stopTimer();
+            
+            interviewStarted = false;
+            
+            const chatMessagesDiv = document.getElementById('chatMessages');
+            const messages = chatMessagesDiv.querySelectorAll('.message');
+            messages.forEach(msg => msg.remove());
+
+            const mcqOptions = chatMessagesDiv.querySelectorAll('.mcq-options');
+    mcqOptions.forEach(opt => opt.remove());
+            
+            const intro = document.querySelector('.interview-intro');
+            if (!intro) {
+                const newIntro = document.createElement('div');
+                newIntro.className = 'interview-intro';
+                newIntro.innerHTML = `
+                    <h3><strong>Practice today, conquer tomorrow.</strong></h3>
+                    <p>Upload your resume and job description, then choose the type of interview practice you need.<br>You can end any interview by typing "END" or when the timer ends.</p>
+                `;
+                chatMessagesDiv.insertBefore(newIntro, chatMessagesDiv.firstChild);
+            }
+            
+            document.getElementById('chatInput').style.display = 'none';
+            document.getElementById('categorySelection').style.display = 'block';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('timer').style.display = 'none';
+            
+            const buttons = document.querySelectorAll('.category-btn');
+         buttons.forEach(btn => {
+    btn.disabled = false;
+    
+    // Reset button innerHTML based on class
+    if (btn.classList.contains('warmup')) {
+        btn.innerHTML = '<div class="category-title">🏃‍♂️ Warm-up Interview</div><div class="category-desc">Quick MCQ practice questions</div>';
+    } else if (btn.classList.contains('technical')) {
+        btn.innerHTML = '<div class="category-title">⚙️ Technical Interview</div><div class="category-desc">Hard skills & coding challenges</div>';
+    } else if (btn.classList.contains('behavioral')) {
+        btn.innerHTML = '<div class="category-title">🤝 Behavioral Interview</div><div class="category-desc">Soft skills & situational questions</div>';
+    } else if (btn.classList.contains('techno-behavioral')) {
+        btn.innerHTML = '<div class="category-title">🔬 Techno-Behavioral Interview</div><div class="category-desc">Mixed technical + behavioral scenarios</div>';
+    }else if (btn.classList.contains('coding')) {
+        btn.innerHTML = '<div class="category-title">🔬 Coding Interview</div><div class="category-desc">Programming questions and Coding challenges</div>';
+    }  
+	else if (btn.classList.contains('complete')) {
+        btn.innerHTML = '<div class="category-title">🎯 Complete Interview</div><div class="category-desc">Full 360° assessment - all categories combined</div>';
+    }
+});
+            
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const micBtn = document.getElementById('micBtn');
+            if (messageInput) {
+                messageInput.disabled = false;
+                messageInput.value = '';
+            }
+            if (sendBtn) sendBtn.disabled = false;
+            if (micBtn) micBtn.disabled = false;
+            
+            document.querySelector(".end-instruction").textContent = 
+                "Type or say \"END\" to complete the interview and receive feedback via email.";
+        }
+		
         function setupInterviewUI(data) {
             // Hide upload section and show chat input
             document.getElementById('uploadSection').style.display = 'none';
             document.getElementById('chatInput').style.display = 'block';
+			document.getElementById('backBtn').style.display = 'block';
 
             // Add welcome message with interview type
             const typeDisplayNames = {
@@ -1314,153 +1318,59 @@
         }
         
         async function startRecording() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: {
-                        sampleRate: 16000,
-                        channelCount: 1,
-                        echoCancellation: true,
-                        noiseSuppression: true
-                    }
-                });
-                
-                mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: 'audio/webm;codecs=opus'
-                });
-                audioChunks = [];
-                
-                mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        audioChunks.push(event.data);
-                    }
-                };
-                
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    await sendAudioToServer(audioBlob);
-                    
-                    // Stop all tracks to turn off microphone
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                    // Hide recording status
-                    const recordingStatus = document.getElementById('recordingStatus');
-                    recordingStatus.classList.remove('active');
-                };
-                
-                mediaRecorder.start(250); // Collect data every 250ms
-                isRecording = true;
-                
-                const micBtn = document.getElementById('micBtn');
-                const recordingStatus = document.getElementById('recordingStatus');
-                
-                micBtn.textContent = '⏹️';
-                micBtn.classList.add('recording');
-                micBtn.title = 'Click to stop recording';
-                recordingStatus.classList.add('active');
-                
-                console.log('🎤 Recording started...');
-                
-            } catch (error) {
-                console.error('Error accessing microphone:', error);
-                addMessage('❌ Could not access microphone. Please check permissions and try again.', false);
-            }
+       try {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            addMessage('❌ Speech recognition not supported in this browser. Please use Chrome.', false);
+            return;
         }
         
-        async function stopRecording() {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                isRecording = false;
-                
-                const micBtn = document.getElementById('micBtn');
-                micBtn.textContent = '🎤';
-                micBtn.classList.remove('recording');
-                micBtn.disabled = true;
-                micBtn.title = 'Processing speech...';
-                
-                console.log('🎤 Recording stopped, processing...');
-            }
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value = transcript;
+            messageInput.focus();
+        };
+        
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            addMessage('❌ Could not understand speech. Please try again.', false);
+        };
+        
+        recognition.onend = () => {
+            isRecording = false;
+            const micBtn = document.getElementById('micBtn');
+            micBtn.textContent = '🎤';
+            micBtn.classList.remove('recording');
+            const recordingStatus = document.getElementById('recordingStatus');
+            recordingStatus.classList.remove('active');
+        };
+        
+        recognition.start();
+        isRecording = true;
+        
+        const micBtn = document.getElementById('micBtn');
+        const recordingStatus = document.getElementById('recordingStatus');
+        micBtn.textContent = '⏹️';
+        micBtn.classList.add('recording');
+        recordingStatus.classList.add('active');
+        
+    } catch (error) {
+        console.error('Error with speech recognition:', error);
+        addMessage('❌ Could not access speech recognition.', false);
+    }
         }
         
-        async function sendAudioToServer(audioBlob) {
-            try {
-                showTypingIndicator();
-                
-                // Convert blob to base64
-                const base64Audio = await blobToBase64(audioBlob);
-                
-                const payload = {
-                    audioData: base64Audio,
-                    sessionId: sessionId,
-                    candidateEmail: candidateEmail
-                };
-                
-                console.log('📤 Sending audio for transcription... Size:', Math.round(audioBlob.size / 1024), 'KB');
-                
-                const response = await fetch(SPEECH_TO_TEXT_URL, {
-                    method: 'POST',
-                    headers: { 
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                hideTypingIndicator();
-                
-                if (!response.ok) {
-                    throw new Error(`Speech-to-text failed: ${response.status}`);
-                }
-                
-                const result = await response.text();
-                let data;
-                try {
-                    data = JSON.parse(result);
-                } catch (e) {
-                    throw new Error('Invalid response from speech service');
-                }
-                
-                // Handle array response
-                if (Array.isArray(data) && data.length > 0) {
-                    data = data[0];
-                }
-                
-                const transcribedText = data.transcription || data.text || '';
-                
-                if (transcribedText.trim()) {
-                    // Put transcribed text in the input field
-                    const messageInput = document.getElementById('messageInput');
-                    messageInput.value = transcribedText;
-                    
-                    // Focus on the input field so user can edit if needed
-                    messageInput.focus();
-                    
-                    console.log('✅ Audio transcribed:', transcribedText);
-                    
-                } else {
-                    addMessage('❌ Could not understand the audio. Please try speaking more clearly or use the keyboard.', false);
-                }
-                
-            } catch (error) {
-                hideTypingIndicator();
-                console.error('Error processing audio:', error);
-                addMessage('❌ Error processing speech. Please try typing your answer instead.', false);
-            } finally {
-                const micBtn = document.getElementById('micBtn');
-                micBtn.disabled = false;
-                micBtn.title = 'Click to record your answer';
-            }
-        }
+    
         
-        function blobToBase64(blob) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64 = reader.result.split(',')[1];
-                    resolve(base64);
-                };
-                reader.readAsDataURL(blob);
-            });
-        }
+     
+     
         
         function showFileStatus(elementId, message, type) {
             const statusEl = document.getElementById(elementId);
