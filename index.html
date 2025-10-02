@@ -108,10 +108,10 @@
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 24px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
             background: #fafbfc;
         }
         
@@ -168,10 +168,10 @@
         
         .upload-section {
             background: #ffffff;
-            padding: 40px;
+            padding: 20px;
             text-align: center;
             border-radius: 16px;
-            margin: 24px;
+            margin: 12px;
             border: 2px dashed #d1d5db;
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -198,7 +198,7 @@
         }
         
         .file-input-group {
-            margin: 24px 0;
+            margin: 12px 0;
             text-align: left;
         }
         
@@ -234,7 +234,7 @@
             font-family: inherit;
             font-size: 14px;
             resize: vertical;
-            min-height: 120px;
+            min-height: 80px;
             transition: all 0.3s ease;
             background: #fafbfc;
         }
@@ -323,6 +323,7 @@
             transition: all 0.2s ease;
             margin-top: 24px;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+			display: none; 
         }
         
         .start-btn:hover {
@@ -485,8 +486,8 @@
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             border: 1px solid #0ea5e9;
             border-radius: 12px;
-            padding: 20px;
-            margin: 20px;
+            padding: 12px;
+            margin: 12px;
             text-align: center;
         }
         
@@ -579,10 +580,20 @@
                 margin: 0 2px;
             }
 			.back-btn {
-    position: static;
-        margin-top: 8px;
-        display: inline-block;
-        margin-right: 8px;
+  position: absolute;
+    top: 24px;
+    left: 24px;
+    background: rgba(255, 255, 255, 0.25);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    color: white;
+    display: none;
+    transition: all 0.3s ease;
 }
 			
 			.back-btn:hover {
@@ -659,7 +670,7 @@
     Select Interview Type
 </button>
 
-                <div class="interview-types-section">
+                <div class="interview-types-section" id="interviewTypesSection">
                     <h3>🎯 Select Interview Type</h3>
                     <div class="interview-types-grid">
                         <div class="interview-type-btn" data-type="warmup" onclick="selectInterviewType('warmup')">
@@ -768,7 +779,7 @@
   
 
 		function showInterviewTypes() {
-    const candidateEmail = document.getElementById('candidateEmail').value.trim();
+ const candidateEmail = document.getElementById('candidateEmail').value.trim();
     const resumeFile = document.getElementById('resumeFile').files[0];
     
     if (!candidateEmail) {
@@ -787,10 +798,11 @@
     }
     
     document.getElementById('interviewTypesSection').style.display = 'block';
+    document.getElementById('startBtn').style.display = 'block';  /* Add this */
     document.querySelector('.select-interview-btn').style.display = 'none';
     
-    // Scroll to interview types
     document.getElementById('interviewTypesSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
 }
 		
 
