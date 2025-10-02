@@ -579,7 +579,8 @@
                 flex: 1;
                 margin: 0 2px;
             }
-			.back-btn {
+			
+.back-btn {
   position: absolute;
     top: 24px;
     left: 24px;
@@ -594,6 +595,9 @@
     color: white;
     display: none;
     transition: all 0.3s ease;
+}
+			.category-selection {
+    display: none;
 }
 			
 			.back-btn:hover {
@@ -655,6 +659,22 @@
                     <input type="email" id="candidateEmail" class="file-input" placeholder="your.email@example.com" required>
                     <div class="file-status" id="emailStatus"></div>
                 </div>
+
+				<div class="category-selection" id="categorySelection">
+    <div class="upload-section">
+        <div class="interview-types-section" id="interviewTypesSection" style="display: block;">
+            <h3>🎯 Select Interview Type</h3>
+            <div class="interview-types-grid">
+                <!-- all 5 interview type buttons here -->
+            </div>
+        </div>
+        
+        <button class="start-btn" id="startBtn" onclick="startInterview()" disabled>
+            🚀 Begin Interview
+        </button>
+    </div>
+</div>
+				
                 
                 <div class="file-input-group">
                     <label for="resumeFile">📄 Resume (PDF Required)*</label>
@@ -666,6 +686,8 @@
                    <label for="jobDescription">💼 Job Description (Optional - for targeted questions)</label>
 					<textarea id="jobDescription" placeholder="Paste the job description or role requirements for more targeted questions..."></textarea>
                 </div>
+
+				
 				<button class="select-interview-btn" onclick="showInterviewTypes()">
     Select Interview Type
 </button>
