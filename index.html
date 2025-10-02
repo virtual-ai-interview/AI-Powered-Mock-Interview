@@ -68,7 +68,7 @@
         .timer {
             position: absolute;
             top: 24px;
-           right: 80px;
+            right: 80px;
             background: rgba(255, 255, 255, 0.25);
             padding: 10px 20px;
             border-radius: 25px;
@@ -105,45 +105,6 @@
             opacity: 0.5;
         }
 
-        .voice-controls {
-            position: absolute;
-            top: 24px;
-            left: 80px;
-            background: rgba(255, 255, 255, 0.25);
-            padding: 8px 12px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            display: none;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .voice-controls select {
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 15px;
-            padding: 6px 12px;
-            font-size: 12px;
-            color: #374151;
-            cursor: pointer;
-        }
-
-        .voice-controls button {
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 12px;
-            padding: 6px 12px;
-            font-size: 12px;
-            cursor: pointer;
-            color: #374151;
-            transition: all 0.2s ease;
-        }
-
-        .voice-controls button:hover {
-            background: rgba(255, 255, 255, 1);
-            transform: scale(1.02);
-        }
-        
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -288,6 +249,7 @@
         .interview-types-section {
             margin: 24px 0;
             text-align: left;
+			display: none; 
         }
 
         .interview-types-section h3 {
@@ -581,10 +543,10 @@
             }
 
             .audio-controls {
-                position: static;
-                margin-top: 12px;
-                display: inline-block;
-                margin-right: 12px;
+             position: static;
+        margin-top: 8px;
+        display: inline-block;
+        margin-left: 8px;
             }
 			
             .voice-controls {
@@ -616,7 +578,45 @@
                 flex: 1;
                 margin: 0 2px;
             }
+			.back-btn {
+    position: static;
+        margin-top: 8px;
+        display: inline-block;
+        margin-right: 8px;
+}
+			
+			.back-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateX(-2px);
+}
         }
+
+		.select-interview-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    margin-top: 20px;
+    width: 100%;
+}
+
+.select-interview-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.select-interview-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+		
 	
     </style>
 </head>
@@ -627,12 +627,6 @@
                 🔊
             </div>
 			<button class="back-btn" id="backBtn" onclick="goBackToCategories()">← Back</button>
-            <div class="voice-controls" id="voiceControls">
-                <select id="voiceSelect" onchange="testSelectedVoice()">
-                    <option value="">Select AI Voice...</option>
-                </select>
-                <button id="testVoiceBtn" onclick="testSelectedVoice()">Test</button>
-            </div>
             <h1>AI-Powered Mock Interview</h1>
             <p>Professional mock interview & Get Personalized Feedback</p>
             <div class="timer" id="timer"></div>
@@ -658,9 +652,12 @@
                 </div>
                 
                 <div class="file-input-group">
-                    <label for="jobDescription">📋 Job Description (Optional)</label>
-                    <textarea id="jobDescription" placeholder="Paste the job description or role requirements for more targeted questions..."></textarea>
+                   <label for="jobDescription">💼 Job Description (Optional - for targeted questions)</label>
+					<textarea id="jobDescription" placeholder="Paste the job description or role requirements for more targeted questions..."></textarea>
                 </div>
+				<button class="select-interview-btn" onclick="showInterviewTypes()">
+    Select Interview Type
+</button>
 
                 <div class="interview-types-section">
                     <h3>🎯 Select Interview Type</h3>
@@ -743,8 +740,7 @@
         let currentAudio = null;
         
         // Voice configuration
-        let selectedVoice = null;
-        let availableVoices = [];
+       
         
         // Initialize session ID
         sessionId = 'tech_interview_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -769,80 +765,38 @@
             console.log("🎯 Interview type selected:", type);
         }
 
-        // Load and populate voices
-        function loadVoices() {
-            return new Promise((resolve) => {
-                let voices = window.speechSynthesis.getVoices();
-                
-                if (voices.length === 0) {
-                    // Voices not loaded yet, wait for event
-                    window.speechSynthesis.addEventListener('voiceschanged', () => {
-                        voices = window.speechSynthesis.getVoices();
-                        populateVoiceSelect(voices);
-                        resolve(voices);
-                    });
-                } else {
-                    populateVoiceSelect(voices);
-                    resolve(voices);
-                }
-            });
-        }
+  
 
-        function populateVoiceSelect(voices) {
-            availableVoices = voices.filter(voice => voice.lang.startsWith('en'));
-            const voiceSelect = document.getElementById('voiceSelect');
-            const voiceControls = document.getElementById('voiceControls');
-            
-            if (voiceSelect && availableVoices.length > 0) {
-                voiceSelect.innerHTML = '<option value="">Select AI Voice...</option>';
-                
-                availableVoices.forEach((voice, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = `${voice.name} (${voice.lang})`;
-                    voiceSelect.appendChild(option);
-                });
-                
-                voiceControls.style.display = 'flex';
-                
-                // Auto-select a good default voice
-                const defaultVoice = availableVoices.find(voice => 
-                    voice.name.includes('Microsoft') && voice.lang === 'en-US'
-                ) || availableVoices.find(voice => 
-                    voice.lang === 'en-US'
-                ) || availableVoices[0];
-                
-                if (defaultVoice) {
-                    const defaultIndex = availableVoices.indexOf(defaultVoice);
-                    voiceSelect.value = defaultIndex;
-                    selectedVoice = defaultVoice;
-                }
-            }
-        }
+		function showInterviewTypes() {
+    const candidateEmail = document.getElementById('candidateEmail').value.trim();
+    const resumeFile = document.getElementById('resumeFile').files[0];
+    
+    if (!candidateEmail) {
+        showFileStatus('emailStatus', '❌ Please enter your email address', 'error');
+        return;
+    }
+    
+    if (!resumeFile) {
+        showFileStatus('resumeStatus', '❌ Please select a PDF resume file', 'error');
+        return;
+    }
 
-        function testSelectedVoice() {
-            const voiceSelect = document.getElementById('voiceSelect');
-            const selectedIndex = voiceSelect.value;
-            
-            if (selectedIndex !== "" && availableVoices[selectedIndex]) {
-                selectedVoice = availableVoices[selectedIndex];
-                
-                // Test with sample interview question
-                const testText = "Hello! I'm your AI interviewer. How does my voice sound for conducting your technical interview?";
-                
-                if (window.speechSynthesis.speaking) {
-                    window.speechSynthesis.cancel();
-                }
-                
-                const utterance = new SpeechSynthesisUtterance(testText);
-                utterance.voice = selectedVoice;
-                utterance.rate = 0.9;
-                utterance.pitch = 1.0;
-                utterance.volume = 1.0;
-                
-                window.speechSynthesis.speak(utterance);
-            }
-        }
+    if (resumeFile.type !== 'application/pdf') {
+        showFileStatus('resumeStatus', '❌ Please upload a PDF file only', 'error');
+        return;
+    }
+    
+    document.getElementById('interviewTypesSection').style.display = 'block';
+    document.querySelector('.select-interview-btn').style.display = 'none';
+    
+    // Scroll to interview types
+    document.getElementById('interviewTypesSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+		
+
+     
+
+      
 
 		
         function addMessage(content, isUser = false, hasAudio = false) {
@@ -1141,7 +1095,7 @@
                     
                     if (textToSpeak.trim()) {
                         setTimeout(() => {
-                            playAudioResponse(textToSpeak, messageElement);
+                         
                         }, 800);
                     }
                 }, 1500);
@@ -1241,7 +1195,7 @@
                     // Play speech after a small delay
                     if (textToSpeak.trim()) {
                         setTimeout(() => {
-                            playAudioResponse(textToSpeak, messageElement);
+                     
                         }, 500);
                     }
                     
@@ -1253,7 +1207,7 @@
                     const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
                     if (textToSpeak.trim()) {
                         setTimeout(() => {
-                            playAudioResponse(textToSpeak, messageElement);
+                     
                         }, 500);
                     }
                     console.log("✅ Added AI output");
@@ -1264,7 +1218,7 @@
                     const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
                     if (textToSpeak.trim()) {
                         setTimeout(() => {
-                            playAudioResponse(textToSpeak, messageElement);
+                  
                         }, 500);
                     }
                     console.log("✅ Added AI text");
@@ -1272,7 +1226,7 @@
                     const messageElement = addMessage(data, false, true);
                     if (data.trim()) {
                         setTimeout(() => {
-                            playAudioResponse(data, messageElement);
+                     
                         }, 500);
                     }
                     console.log("✅ Added string response");
@@ -1305,6 +1259,14 @@
                 }
             }
         }
+
+		function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+		
 
         // Speech-to-Text Functions
         async function toggleRecording() {
@@ -1462,7 +1424,7 @@
 
         // Initialize voices when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            loadVoices();
+      
         });
         
         console.log("🔧 Frontend initialized with TTS support and voice selection. API Base:", API_BASE);
