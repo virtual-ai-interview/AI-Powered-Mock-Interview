@@ -784,6 +784,25 @@
         sessionId = 'tech_interview_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         console.log("🔧 Session ID:", sessionId);
 
+		let selectedVoice = null;
+
+function initializeVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    selectedVoice = voices.find(voice => voice.name === 'Google US English') || 
+                   voices.find(voice => voice.name.includes('Google') && voice.lang.startsWith('en')) || 
+                   voices.find(voice => voice.lang === 'en-US') || 
+                   voices[0];
+    if (selectedVoice) {
+        console.log("🎤 Using voice:", selectedVoice.name, "(" + selectedVoice.lang + ")");
+    }
+}
+
+if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.addEventListener('voiceschanged', initializeVoice);
+} else {
+    initializeVoice();
+}
+		
         function showInterviewTypes() {
             const candidateEmail = document.getElementById('candidateEmail').value.trim();
             const resumeFile = document.getElementById('resumeFile').files[0];
@@ -1058,37 +1077,49 @@ if (intro) intro.remove();
             document.querySelector(".end-instruction").textContent = 
                 "Type or say \"END\" to complete the interview and receive feedback via email.";
         }
-		function speakText(text, messageElement) {
-    if (!audioEnabled) return;
+	function speakText(text, messageElement) {
+    if (!audioEnabled || !text) return;
     
-    if (currentAudio) {
-        window.speechSynthesis.cancel();
-        document.querySelectorAll('.message.ai.speaking').forEach(msg => {
-            msg.classList.remove('speaking');
-        });
+    try {
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            document.querySelectorAll('.message.ai.speaking').forEach(msg => {
+                msg.classList.remove('speaking');
+            });
+        }
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+        
+        utterance.rate = 0.85;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        
+        if (messageElement) {
+            messageElement.classList.add('speaking');
+        }
+        
+        utterance.onend = () => {
+            if (messageElement) {
+                messageElement.classList.remove('speaking');
+            }
+        };
+        
+        utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event);
+            if (messageElement) {
+                messageElement.classList.remove('speaking');
+            }
+        };
+        
+        window.speechSynthesis.speak(utterance);
+        
+    } catch (error) {
+        console.error('Error with speech synthesis:', error);
     }
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-    
-    utterance.onstart = () => {
-        messageElement.classList.add('speaking');
-        currentAudio = utterance;
-    };
-    
-    utterance.onend = () => {
-        messageElement.classList.remove('speaking');
-        currentAudio = null;
-    };
-    
-    utterance.onerror = () => {
-        messageElement.classList.remove('speaking');
-        currentAudio = null;
-    };
-    
-    window.speechSynthesis.speak(utterance);
 }
 		
         function setupInterviewUI(data) {
@@ -1543,5 +1574,10 @@ let accumulatedTranscript = '';
 
         console.log("🔧 Frontend initialized. API Base:", API_BASE);
     </script>
+
+	document.addEventListener('DOMContentLoaded', () => {
+    initializeVoice();
+});
+	
 </body>
 </html>
