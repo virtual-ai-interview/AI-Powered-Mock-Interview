@@ -1140,8 +1140,18 @@ const typeDisplayNames = {
     'comprehensive': 'Complete Interview'
 };
 
-addMessage(`👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>Welcome! I'm your AI Interviewer, and I'll be conducting your <strong>${selectedInterviewType}</strong> mock interview today. Let's start with a classic opener: Could you briefly tell me about yourself and your technical background?`);
-			
+const welcomeMessage = `👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>Welcome! I'm your AI Interviewer, and I'll be conducting your <strong>${selectedInterviewType}</strong> mock interview today. Let's start with a classic opener: Could you briefly tell me about yourself and your technical background?`;
+const welcomeElement = addMessage(welcomeMessage, false, true);
+
+const tempDiv = document.createElement('div');
+tempDiv.innerHTML = welcomeMessage;
+const welcomeText = tempDiv.textContent || tempDiv.innerText || '';
+
+if (welcomeText.trim() && selectedInterviewType !== 'warmup') {
+    setTimeout(() => {
+        speakText(welcomeText, welcomeElement);
+    }, 500);
+}		
 			const aiResponse = data.response || data.output || data.text || data.question || '';
 
 if (aiResponse && aiResponse.trim()) {
