@@ -876,18 +876,18 @@
         }
 
         function toggleAudio() {
-            audioEnabled = !audioEnabled;
-            const toggle = document.getElementById('audioToggle');
-            toggle.textContent = audioEnabled ? '🔊' : '🔇';
-            toggle.classList.toggle('muted', !audioEnabled);
-            
-            if (!audioEnabled && currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-                document.querySelectorAll('.message.ai.speaking').forEach(msg => {
-                    msg.classList.remove('speaking');
-                });
-            }
+           audioEnabled = !audioEnabled;
+    const toggle = document.getElementById('audioToggle');
+    toggle.textContent = audioEnabled ? '🔊' : '🔇';
+    toggle.classList.toggle('muted', !audioEnabled);
+    
+    if (!audioEnabled && currentAudio) {
+        window.speechSynthesis.cancel();
+        currentAudio = null;
+        document.querySelectorAll('.message.ai.speaking').forEach(msg => {
+            msg.classList.remove('speaking');
+        });
+    }
         }
         
         function fileToBase64(file) {
@@ -1058,6 +1058,38 @@ if (intro) intro.remove();
             document.querySelector(".end-instruction").textContent = 
                 "Type or say \"END\" to complete the interview and receive feedback via email.";
         }
+		function speakText(text, messageElement) {
+    if (!audioEnabled) return;
+    
+    if (currentAudio) {
+        window.speechSynthesis.cancel();
+        document.querySelectorAll('.message.ai.speaking').forEach(msg => {
+            msg.classList.remove('speaking');
+        });
+    }
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    
+    utterance.onstart = () => {
+        messageElement.classList.add('speaking');
+        currentAudio = utterance;
+    };
+    
+    utterance.onend = () => {
+        messageElement.classList.remove('speaking');
+        currentAudio = null;
+    };
+    
+    utterance.onerror = () => {
+        messageElement.classList.remove('speaking');
+        currentAudio = null;
+    };
+    
+    window.speechSynthesis.speak(utterance);
+}
 		
         function setupInterviewUI(data) {
 		const intro = document.querySelector('.interview-intro');
@@ -1102,7 +1134,7 @@ if (aiResponse && aiResponse.trim()) {
             const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
             
             if (textToSpeak.trim()) {
-                setTimeout(() => {}, 800);
+                speakText(textToSpeak, messageElement);
             }
         }
     }, 1000);
@@ -1242,7 +1274,7 @@ setTimeout(() => {
         const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
         
         if (textToSpeak.trim()) {
-            setTimeout(() => {}, 500);
+          speakText(textToSpeak, messageElement);
         }
     }
     console.log("✅ Added AI response");
@@ -1266,7 +1298,7 @@ setTimeout(() => {
         tempDiv.innerHTML = data.output;
         const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
         if (textToSpeak.trim()) {
-            setTimeout(() => {}, 500);
+           speakText(textToSpeak, messageElement);
         }
     }
     console.log("✅ Added AI output");
@@ -1290,7 +1322,7 @@ setTimeout(() => {
         tempDiv.innerHTML = data.text;
         const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
         if (textToSpeak.trim()) {
-            setTimeout(() => {}, 500);
+          speakText(textToSpeak, messageElement);
         }
     }
     console.log("✅ Added AI text");
