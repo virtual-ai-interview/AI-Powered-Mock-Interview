@@ -1064,8 +1064,12 @@ if (intro) intro.remove();
         'comprehensive': 'Complete Interview'
     };
     
+   if (selectedInterviewType === 'warmup') {
     addMessage(`👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>`);
-    
+} else {
+    addMessage(`👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>Hello! Let's begin with a simple question: Tell me about yourself and your background.`);
+}
+			
     if (data.response) {
     if (selectedInterviewType === 'warmup') {
         const lines = data.response.split('\n');
