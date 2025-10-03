@@ -181,13 +181,7 @@
             align-self: center;
         }
 
-        .audio-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 14px;
-            opacity: 0.7;
-        }
+       
         .mcq-options {
     display: flex;
     flex-direction: column;
@@ -835,11 +829,7 @@ if (window.speechSynthesis.getVoices().length === 0) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
             
-            if (hasAudio && !isUser) {
-                messageDiv.innerHTML = content + '<div class="audio-indicator">🔊</div>';
-            } else {
-                messageDiv.innerHTML = content;
-            }
+             messageDiv.innerHTML = content;
             
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -901,7 +891,7 @@ if (window.speechSynthesis.getVoices().length === 0) {
     toggle.textContent = audioEnabled ? '🔊' : '🔇';
     toggle.classList.toggle('muted', !audioEnabled);
     
-    if (!audioEnabled && currentAudio) {
+    if (!audioEnabled) {
         window.speechSynthesis.cancel();
         currentAudio = null;
         document.querySelectorAll('.message.ai.speaking').forEach(msg => {
@@ -1027,6 +1017,10 @@ if (window.speechSynthesis.getVoices().length === 0) {
         }
 
         function goBackToCategories() {
+			window.speechSynthesis.cancel();
+    document.querySelectorAll('.message.ai.speaking').forEach(msg => {
+        msg.classList.remove('speaking');
+    });
             stopTimer();
             
             interviewStarted = false;
@@ -1141,7 +1135,7 @@ const typeDisplayNames = {
 };
 
 const welcomeMessage = `👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>Welcome! I'm your AI Interviewer, and I'll be conducting your <strong>${selectedInterviewType}</strong> mock interview today. Let's start with a classic opener: Could you briefly tell me about yourself and your technical background?`;
-const welcomeElement = addMessage(welcomeMessage, false, true);
+const welcomeElement = addMessage(welcomeMessage, false);
 
 const tempDiv = document.createElement('div');
 tempDiv.innerHTML = welcomeMessage;
@@ -1170,7 +1164,7 @@ if (aiResponse && aiResponse.trim()) {
                 renderMCQOptions(aiResponse);
             }
         } else {
-            const messageElement = addMessage(aiResponse, false, true);
+            const messageElement = addMessage(aiResponse, false);
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = aiResponse;
             const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
@@ -1310,7 +1304,7 @@ setTimeout(() => {
             renderMCQOptions(data.response);
         }
     } else {
-        const messageElement = addMessage(data.response, false, true);
+        const messageElement = addMessage(data.response, false);
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = data.response;
         const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
@@ -1335,7 +1329,7 @@ setTimeout(() => {
             renderMCQOptions(data.output);
         }
     } else {
-        const messageElement = addMessage(data.output, false, true);
+        const messageElement = addMessage(data.output, false);
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = data.output;
         const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
@@ -1359,7 +1353,7 @@ setTimeout(() => {
             renderMCQOptions(data.text);
         }
     } else {
-        const messageElement = addMessage(data.text, false, true);
+        const messageElement = addMessage(data.text, false);
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = data.text;
         const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
