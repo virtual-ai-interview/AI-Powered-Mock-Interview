@@ -1076,12 +1076,7 @@ const typeDisplayNames = {
     'comprehensive': 'Complete Interview'
 };
 
-if (selectedInterviewType === 'warmup') {
-    addMessage(`👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>`);
-} else {
-    addMessage(`👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>Hello! Let's begin with a simple question: Tell me about yourself and your background.`);
-}
-
+addMessage(`👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>Hello! Let's begin with a simple question: Tell me about yourself and your background.`);
 const aiResponse = data.response || data.output || data.text || data.question || '';
 
 if (aiResponse && aiResponse.trim()) {
