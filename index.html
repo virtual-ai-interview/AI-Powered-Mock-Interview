@@ -575,6 +575,62 @@
             line-height: 1.4;
         }
 
+		.feedback-section {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+    text-align: center;
+}
+
+.feedback-section h4 {
+    color: #92400e;
+    margin-bottom: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.feedback-section p {
+    color: #b45309;
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+}
+
+.feedback-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #f59e0b;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+    min-height: 80px;
+    margin-bottom: 12px;
+}
+
+.feedback-submit-btn {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.feedback-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.feedback-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+		
         .recording-status {
             display: none;
             align-items: center;
@@ -761,6 +817,7 @@
         const UPLOAD_URL = `${API_BASE}/upload-resume`;
         const CHAT_URL = `${API_BASE}/interview-chat`;
         const SPEECH_TO_TEXT_URL = `${API_BASE}/speech-to-text`;
+		const FEEDBACK_URL = `${API_BASE}/user-feedback`;
         
         let interviewStarted = false;
         let timeRemaining = 900;
@@ -1373,6 +1430,18 @@ setTimeout(() => {
                     if (micBtn) micBtn.disabled = true;
                     document.querySelector(".end-instruction").textContent =
                         "Interview has ended. Check your email for feedback ✅";
+					 setTimeout(() => {
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'feedback-section';
+        feedbackDiv.innerHTML = `
+            <h4>📝 Help Us Improve</h4>
+            <p>Your feedback is valuable! Share your experience (optional)</p>
+            <textarea id="feedbackText" class="feedback-textarea" placeholder="Tell us about your interview experience, any issues you faced, or suggestions for improvement..."></textarea>
+            <button id="feedbackSubmitBtn" class="feedback-submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+        `;
+        document.getElementById('chatMessages').appendChild(feedbackDiv);
+        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+    }, 1000);
                 }
                 
             } catch (error) {
@@ -1489,6 +1558,51 @@ let accumulatedTranscript = '';
         
         const messageInput = document.getElementById('messageInput');
         messageInput.focus();
+    }
+}
+		async function submitFeedback() {
+    const feedbackText = document.getElementById('feedbackText').value.trim();
+    const submitBtn = document.getElementById('feedbackSubmitBtn');
+    
+    if (!feedbackText) {
+        alert('Please enter your feedback before submitting.');
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    
+    try {
+        const payload = {
+            sessionId: sessionId,
+            candidateEmail: candidateEmail,
+            interviewType: selectedInterviewType,
+            feedback: feedbackText,
+            timestamp: new Date().toISOString()
+        };
+        
+        const response = await fetch(FEEDBACK_URL, {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+            const feedbackSection = document.querySelector('.feedback-section');
+            if (feedbackSection) {
+                feedbackSection.innerHTML = '<h4>✅ Thank you for your feedback!</h4><p>Your input helps us improve the interview experience.</p>';
+            }
+        } else {
+            throw new Error('Failed to submit feedback');
+        }
+    } catch (error) {
+        console.error('Error submitting feedback:', error);
+        alert('Failed to submit feedback. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Feedback';
     }
 }
 		
