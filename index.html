@@ -1088,7 +1088,10 @@ if (window.speechSynthesis.getVoices().length === 0) {
 
             const mcqOptions = chatMessagesDiv.querySelectorAll('.mcq-options');
             mcqOptions.forEach(opt => opt.remove());
-            
+
+			const feedbackSection = document.querySelector('.feedback-section');
+if (feedbackSection) feedbackSection.remove();
+			
           const intro = document.querySelector('.interview-intro');
 if (intro) intro.remove();
             
