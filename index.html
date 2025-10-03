@@ -1341,57 +1341,94 @@ if (intro) intro.remove();
                 await stopRecording();
             }
         }
-        
+
+		let recognitionInstance = null;
+let accumulatedTranscript = '';
+		
         async function startRecording() {
-            try {
-                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                    addMessage('❌ Speech recognition not supported in this browser. Please use Chrome.', false);
-                    return;
-                }
-                
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                const recognition = new SpeechRecognition();
-                
-                recognition.continuous = true;
-                recognition.interimResults = true;
-                recognition.lang = 'en-US';
-                
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    const messageInput = document.getElementById('messageInput');
-                    messageInput.value = transcript;
-                    messageInput.focus();
-                };
-                
-                recognition.onerror = (event) => {
-                    console.error('Speech recognition error:', event.error);
-                    addMessage('❌ Could not understand speech. Please try again.', false);
-                };
-                
-                recognition.onend = () => {
-                    isRecording = false;
-                    const micBtn = document.getElementById('micBtn');
-                    micBtn.textContent = '🎤';
-                    micBtn.classList.remove('recording');
-                    const recordingStatus = document.getElementById('recordingStatus');
-                    recordingStatus.classList.remove('active');
-                };
-                
-                recognition.start();
-                isRecording = true;
-                
-                const micBtn = document.getElementById('micBtn');
-                const recordingStatus = document.getElementById('recordingStatus');
-                micBtn.textContent = '⏹️';
-                micBtn.classList.add('recording');
-                recordingStatus.classList.add('active');
-                
-            } catch (error) {
-                console.error('Error with speech recognition:', error);
-                addMessage('❌ Could not access speech recognition.', false);
-            }
+           try {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            addMessage('❌ Speech recognition not supported in this browser. Please use Chrome.', false);
+            return;
         }
         
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!recognitionInstance) {
+            recognitionInstance = new SpeechRecognition();
+            recognitionInstance.continuous = true;
+            recognitionInstance.interimResults = true;
+            recognitionInstance.lang = 'en-US';
+            
+            recognitionInstance.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    accumulatedTranscript += finalTranscript;
+                }
+                
+                const messageInput = document.getElementById('messageInput');
+                messageInput.value = accumulatedTranscript + interimTranscript;
+            };
+            
+            recognitionInstance.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error !== 'no-speech') {
+                    addMessage('❌ Could not understand speech. Please try again.', false);
+                }
+            };
+            
+            recognitionInstance.onend = () => {
+                if (isRecording) {
+                    recognitionInstance.start();
+                }
+            };
+        }
+        
+        const messageInput = document.getElementById('messageInput');
+        accumulatedTranscript = messageInput.value;
+        
+        recognitionInstance.start();
+        isRecording = true;
+        
+        const micBtn = document.getElementById('micBtn');
+        const recordingStatus = document.getElementById('recordingStatus');
+        micBtn.textContent = '⏹️';
+        micBtn.classList.add('recording');
+        recordingStatus.classList.add('active');
+        
+    } catch (error) {
+        console.error('Error with speech recognition:', error);
+        addMessage('❌ Could not access speech recognition.', false);
+    }
+        }
+
+		async function stopRecording() {
+    if (recognitionInstance && isRecording) {
+        isRecording = false;
+        recognitionInstance.stop();
+        
+        const micBtn = document.getElementById('micBtn');
+        const recordingStatus = document.getElementById('recordingStatus');
+        micBtn.textContent = '🎤';
+        micBtn.classList.remove('recording');
+        recordingStatus.classList.remove('active');
+        
+        const messageInput = document.getElementById('messageInput');
+        messageInput.focus();
+    }
+}
+		
         function showFileStatus(elementId, message, type) {
             const statusEl = document.getElementById(elementId);
             if (statusEl) {
