@@ -326,7 +326,7 @@
             display: none;
         }
 
-       .interview-categories {
+    .interview-categories {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
@@ -334,10 +334,7 @@
 }
 
 .category-btn.warmup,
-.category-btn.coding {
-    grid-column: span 1;
-}
-
+.category-btn.coding,
 .category-btn.technical,
 .category-btn.behavioral {
     grid-column: span 1;
@@ -345,6 +342,8 @@
 
 .category-btn.techno-behavioral {
     grid-column: 1 / -1;
+    max-width: 50%;
+    margin: 0 auto;
 }
 
 .category-btn.complete {
