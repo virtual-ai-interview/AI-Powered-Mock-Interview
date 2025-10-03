@@ -1147,11 +1147,11 @@ const tempDiv = document.createElement('div');
 tempDiv.innerHTML = welcomeMessage;
 const welcomeText = tempDiv.textContent || tempDiv.innerText || '';
 
-if (welcomeText.trim() && selectedInterviewType !== 'warmup') {
+if (welcomeText.trim()) {
     setTimeout(() => {
         speakText(welcomeText, welcomeElement);
     }, 500);
-}		
+}	
 			const aiResponse = data.response || data.output || data.text || data.question || '';
 
 if (aiResponse && aiResponse.trim()) {
