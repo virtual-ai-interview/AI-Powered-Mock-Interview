@@ -689,37 +689,37 @@
                         <p>Choose the category you'd like to practice</p>
                     </div>
                     
-                    <div class="interview-categories">
-                        <button class="category-btn warmup" onclick="startInterview('warmup')">
-                            <div class="category-title">🏃‍♂️ Warm-up</div>
-                            <div class="category-desc">Quick MCQ practice questions</div>
-                        </button>
-                        
-                        <button class="category-btn technical" onclick="startInterview('technical')">
-                            <div class="category-title">⚙️ Technical</div>
-                            <div class="category-desc">Hard skills & coding challenges</div>
-                        </button>
-                        
-                        <button class="category-btn behavioral" onclick="startInterview('behavioral')">
-                            <div class="category-title">🤝 Behavioral</div>
-                            <div class="category-desc">Soft skills & situational questions</div>
-                        </button>
-                        
-                        <button class="category-btn techno-behavioral" onclick="startInterview('techno-behavioral')">
-                            <div class="category-title">🔬 Techno-Behavioral</div>
-                            <div class="category-desc">Mixed technical + behavioral scenarios</div>
-                        </button>
-
-                        <button class="category-btn coding" onclick="startInterview('coding')">
-                            <div class="category-title">💻 Coding</div>
-                            <div class="category-desc">Programming questions and Coding challenges</div>
-                        </button>
-                        
-                        <button class="category-btn complete" onclick="startInterview('comprehensive')">
-                            <div class="category-title">🎯 Complete Interview</div>
-                            <div class="category-desc">Full 360° assessment - all categories combined</div>
-                        </button>
-                    </div>
+                   <div class="interview-categories">
+    <button class="category-btn warmup" onclick="startInterview('warmup')">
+        <div class="category-title">🏃‍♂️ Warm-up</div>
+        <div class="category-desc">Quick MCQ practice questions</div>
+    </button>
+    
+    <button class="category-btn coding" onclick="startInterview('coding')">
+        <div class="category-title">💻 Coding</div>
+        <div class="category-desc">Programming questions and Coding challenges</div>
+    </button>
+    
+    <button class="category-btn technical" onclick="startInterview('technical')">
+        <div class="category-title">⚙️ Technical</div>
+        <div class="category-desc">Hard skills & coding challenges</div>
+    </button>
+    
+    <button class="category-btn behavioral" onclick="startInterview('behavioral')">
+        <div class="category-title">🤝 Behavioral</div>
+        <div class="category-desc">Soft skills & situational questions</div>
+    </button>
+    
+    <button class="category-btn techno-behavioral" onclick="startInterview('techno-behavioral')">
+        <div class="category-title">🔬 Techno-Behavioral</div>
+        <div class="category-desc">Mixed technical + behavioral scenarios</div>
+    </button>
+    
+    <button class="category-btn complete" onclick="startInterview('comprehensive')">
+        <div class="category-title">🎯 Complete Interview</div>
+        <div class="category-desc">Full 360° assessment - all categories combined</div>
+    </button>
+</div>
                 </div>
             </div>
         </div>
@@ -999,16 +999,8 @@
             const mcqOptions = chatMessagesDiv.querySelectorAll('.mcq-options');
             mcqOptions.forEach(opt => opt.remove());
             
-            const intro = document.querySelector('.interview-intro');
-            if (!intro) {
-                const newIntro = document.createElement('div');
-                newIntro.className = 'interview-intro';
-                newIntro.innerHTML = `
-                    <h3><strong>Practice today, conquer tomorrow.</strong></h3>
-                    <p>Upload your resume and job description, then choose the type of interview practice you need.<br>You can end any interview by typing "END" or when the timer ends.</p>
-                `;
-                chatMessagesDiv.insertBefore(newIntro, chatMessagesDiv.firstChild);
-            }
+          const intro = document.querySelector('.interview-intro');
+if (intro) intro.remove();
             
             document.getElementById('chatInput').style.display = 'none';
             document.getElementById('categorySelection').style.display = 'block';
@@ -1064,35 +1056,39 @@ if (intro) intro.remove();
         'comprehensive': 'Complete Interview'
     };
     
-   if (selectedInterviewType === 'warmup') {
+if (selectedInterviewType === 'warmup') {
     addMessage(`👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>`);
 } else {
     addMessage(`👨‍💼 <strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>Hello! Let's begin with a simple question: Tell me about yourself and your background.`);
 }
 			
-    if (data.response) {
-    if (selectedInterviewType === 'warmup') {
-        const lines = data.response.split('\n');
-        const questionLines = [];
-        for (let line of lines) {
-            if (/^[A-D][.)\]]\s/.test(line.trim())) break;
-            questionLines.push(line);
-        }
-        const questionText = questionLines.join('\n').trim();
+   
+   if (data.response || data.output || data.text) {
+    setTimeout(() => {
+        const aiResponse = data.response || data.output || data.text;
         
-        addMessage(questionText, false, false);
-        renderMCQOptions(data.response);
-    } else {
-        const messageElement = addMessage(data.response, false, true);
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = data.response;
-        const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
-        
-        if (textToSpeak.trim()) {
-            setTimeout(() => {}, 500);
+        if (selectedInterviewType === 'warmup') {
+            const lines = aiResponse.split('\n');
+            const questionLines = [];
+            for (let line of lines) {
+                if (/^[A-D][.)\]]\s/.test(line.trim())) break;
+                questionLines.push(line);
+            }
+            const questionText = questionLines.join('\n').trim();
+            
+            addMessage(questionText, false, false);
+            renderMCQOptions(aiResponse);
+        } else {
+            const messageElement = addMessage(aiResponse, false, true);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = aiResponse;
+            const textToSpeak = tempDiv.textContent || tempDiv.innerText || '';
+            
+            if (textToSpeak.trim()) {
+                setTimeout(() => {}, 800);
+            }
         }
-    }
-    console.log("✅ Added AI response");
+    }, 1500);
 } else if (data.output) {
     if (selectedInterviewType === 'warmup') {
         const lines = data.output.split('\n');
