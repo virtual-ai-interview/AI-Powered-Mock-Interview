@@ -785,7 +785,7 @@
         <div class="category-desc">Mixed technical + behavioral scenarios</div>
     </button>
     
-    <button class="category-btn complete" onclick="startInterview('comprehensive')">
+    <button class="category-btn complete" onclick="startInterview('complete')">
         <div class="category-title">🎯 Complete Interview</div>
         <div class="category-desc">Full 360° assessment - all categories combined</div>
     </button>
@@ -997,7 +997,7 @@ if (window.speechSynthesis.getVoices().length === 0) {
 
             console.log("🚀 Starting technical interview process...");
 
-			if (interviewType === 'comprehensive') {
+			if (interviewType === 'complete') {
     timeRemaining = 1800; // 30 minutes
 } else {
     timeRemaining = 900; // 15 minutes
@@ -1188,7 +1188,7 @@ const typeDisplayNames = {
     'behavioral': 'Behavioral Interview',
     'techno-behavioral': 'Techno-Behavioral Interview',
     'coding': 'Coding Interview',
-    'comprehensive': 'Complete Interview'
+    'complete': 'Complete Interview'
 };
 
 const welcomeMessage = `<strong>${typeDisplayNames[selectedInterviewType]} Started</strong><br>Welcome! I'm your AI Interviewer, and I'll be conducting your <strong>${selectedInterviewType}</strong> mock interview today. Let's start with a classic opener: Could you briefly tell me about yourself and your technical background?`;
