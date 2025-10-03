@@ -730,7 +730,7 @@
                 Recording... Click stop when finished
             </div>
             <div class="input-group">
-                <textarea id="messageInput" placeholder="Type your answer here or use the microphone..." maxlength="800" rows="3"></textarea>
+                <textarea id="messageInput" placeholder="Type your answer here or use the microphone..." maxlength="2000" rows="3"></textarea>
                 <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Click to record your answer">
                     🎤
                 </button>
@@ -911,6 +911,12 @@
 
             console.log("🚀 Starting technical interview process...");
 
+			if (interviewType === 'comprehensive') {
+    timeRemaining = 1800; // 30 minutes
+} else {
+    timeRemaining = 900; // 15 minutes
+}
+			
             try {
                 console.log("📄 Converting PDF to base64...");
                 const base64Data = await fileToBase64(resumeFile);
@@ -1043,6 +1049,8 @@
         }
 		
         function setupInterviewUI(data) {
+			const intro = document.querySelector('.interview-intro');
+if (intro) intro.remove();
       document.getElementById('categorySelection').style.display = 'none';
     document.getElementById('chatInput').style.display = 'block';
     document.getElementById('backBtn').style.display = 'block';
@@ -1340,8 +1348,8 @@
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 const recognition = new SpeechRecognition();
                 
-                recognition.continuous = false;
-                recognition.interimResults = false;
+                recognition.continuous = true;
+                recognition.interimResults = true;
                 recognition.lang = 'en-US';
                 
                 recognition.onresult = (event) => {
