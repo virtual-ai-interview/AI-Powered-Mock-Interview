@@ -326,15 +326,21 @@
             display: none;
         }
 
-        .interview-categories {
-             display: grid;
-    grid-template-columns: repeat(3, 1fr);
+       .interview-categories {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     margin-top: 20px;
-        }
+}
 
-		.category-btn.warmup,
+	.category-btn.warmup,
 .category-btn.coding {
+    grid-column: span 1;
+}
+
+.category-btn.technical,
+.category-btn.behavioral,
+.category-btn.techno-behavioral {
     grid-column: span 1;
 }
 
