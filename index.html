@@ -13,6 +13,26 @@
     'send_page_view': false
   });
 </script>
+
+	<script>
+  const GA_ID = 'G-PQJTN8RL74';
+  // enable debug only on localhost
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', GA_ID, { 'debug_mode': true });
+    console.log('GA debug_mode set for', GA_ID);
+  }
+  // helper wrapper for visibility
+  function fireGtag(eventName, params) {
+    console.log('gtag event →', eventName, params);
+    gtag('event', eventName, params);
+  }
+</script>
+
+
+	
   <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Technical Interview</title>
