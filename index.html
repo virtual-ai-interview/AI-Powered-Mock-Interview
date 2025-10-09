@@ -29,9 +29,16 @@
     console.log('gtag event →', eventName, params);
     gtag('event', eventName, params);
   }
-</script>
 
 
+async function sha256Hex(text) {
+    const enc = new TextEncoder();
+    const buf = await crypto.subtle.digest('SHA-256', enc.encode(text.trim().toLowerCase()));
+    return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+}
+	</script>
 	
   <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1099,11 +1106,14 @@ if (window.speechSynthesis.getVoices().length === 0) {
             if (interviewStarted && interviewStartTime) {
                 const timeSpent = Math.round((Date.now() - interviewStartTime) / 1000);
                 
-                gtag('event', 'interview_abandoned', {
-                    'interview_type': selectedInterviewType,
-                    'time_spent_seconds': timeSpent,
-                    'user_id': candidateEmail
-                });
+               (async () => {
+    const hashedId = await sha256Hex(candidateEmail);
+    fireGtag('interview_abandoned', {
+        'interview_type': selectedInterviewType,
+        'time_spent_seconds': timeSpent,
+        'user_id': hashedId
+    });
+})();
             }
 
 			window.speechSynthesis.cancel();
@@ -1213,14 +1223,16 @@ if (intro) intro.remove();
         function setupInterviewUI(data) {
         interviewStartTime = Date.now();
 
-        gtag('config', 'G-PQJTN8RL74', {
-            'user_id': candidateEmail
-        });
-
-        gtag('event', 'interview_start', {
-            'interview_type': selectedInterviewType,
-            'user_id': candidateEmail
-        });
+     (async () => {
+    const hashedId = await sha256Hex(candidateEmail);
+    gtag('config', 'G-PQJTN8RL74', {
+        'user_id': hashedId
+    });
+    fireGtag('interview_start', {
+        'interview_type': selectedInterviewType,
+        'user_id': hashedId
+    });
+})();
 
 		const intro = document.querySelector('.interview-intro');
 if (intro) intro.remove();
@@ -1471,11 +1483,14 @@ setTimeout(() => {
                 if (data.response && data.response.includes("✅ Thanks for completing")) {
                     const timeSpent = Math.round((Date.now() - interviewStartTime) / 1000);
 
-                    gtag('event', 'interview_complete', {
-                        'interview_type': selectedInterviewType,
-                        'time_spent_seconds': timeSpent,
-                        'user_id': candidateEmail
-                    });
+                 (async () => {
+    const hashedId = await sha256Hex(candidateEmail);
+    fireGtag('interview_complete', {
+        'interview_type': selectedInterviewType,
+        'time_spent_seconds': timeSpent,
+        'user_id': hashedId
+    });
+})();
 
                     const messageInput = document.getElementById('messageInput');
                     const sendBtn = document.getElementById('sendBtn');
