@@ -9,6 +9,9 @@
   gtag('js', new Date());
 
   gtag('config', 'G-PQJTN8RL74');
+	 gtag('config', 'G-PQJTN8RL74', {
+    'send_page_view': false
+  });
 </script>
   <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -823,6 +826,7 @@
         let sessionId = null;
         let selectedInterviewType = null;
         let documentsUploaded = false;
+        let interviewStartTime = null;
         
         let isRecording = false;
       
@@ -996,9 +1000,9 @@ if (window.speechSynthesis.getVoices().length === 0) {
             console.log("🚀 Starting technical interview process...");
 
 			if (interviewType === 'complete') {
-    timeRemaining = 1800; // 30 minutes
+    timeRemaining = 1800;
 } else {
-    timeRemaining = 900; // 15 minutes
+    timeRemaining = 900;
 }
 			
             try {
@@ -1072,6 +1076,16 @@ if (window.speechSynthesis.getVoices().length === 0) {
         }
 
         function goBackToCategories() {
+            if (interviewStarted && interviewStartTime) {
+                const timeSpent = Math.round((Date.now() - interviewStartTime) / 1000);
+                
+                gtag('event', 'interview_abandoned', {
+                    'interview_type': selectedInterviewType,
+                    'time_spent_seconds': timeSpent,
+                    'user_id': candidateEmail
+                });
+            }
+
 			window.speechSynthesis.cancel();
     document.querySelectorAll('.message.ai.speaking').forEach(msg => {
         msg.classList.remove('speaking');
@@ -1079,6 +1093,7 @@ if (window.speechSynthesis.getVoices().length === 0) {
             stopTimer();
             
             interviewStarted = false;
+            interviewStartTime = null;
             
             const chatMessagesDiv = document.getElementById('chatMessages');
             const messages = chatMessagesDiv.querySelectorAll('.message');
@@ -1176,6 +1191,17 @@ if (intro) intro.remove();
 }
 		
         function setupInterviewUI(data) {
+        interviewStartTime = Date.now();
+
+        gtag('config', 'G-PQJTN8RL74', {
+            'user_id': candidateEmail
+        });
+
+        gtag('event', 'interview_start', {
+            'interview_type': selectedInterviewType,
+            'user_id': candidateEmail
+        });
+
 		const intro = document.querySelector('.interview-intro');
 if (intro) intro.remove();
 
@@ -1423,6 +1449,14 @@ setTimeout(() => {
 }
 
                 if (data.response && data.response.includes("✅ Thanks for completing")) {
+                    const timeSpent = Math.round((Date.now() - interviewStartTime) / 1000);
+
+                    gtag('event', 'interview_complete', {
+                        'interview_type': selectedInterviewType,
+                        'time_spent_seconds': timeSpent,
+                        'user_id': candidateEmail
+                    });
+
                     const messageInput = document.getElementById('messageInput');
                     const sendBtn = document.getElementById('sendBtn');
                     const micBtn = document.getElementById('micBtn');
@@ -1485,7 +1519,8 @@ let accumulatedTranscript = '';
             return;
         }
         
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition = window
+			   .SpeechRecognition || window.webkitSpeechRecognition;
         
         if (!recognitionInstance) {
             recognitionInstance = new SpeechRecognition();
