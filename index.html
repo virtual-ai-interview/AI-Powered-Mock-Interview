@@ -1228,9 +1228,10 @@ if (intro) intro.remove();
 
      (async () => {
     const hashedId = await sha256Hex(candidateEmail);
-    gtag('config', 'G-PQJTN8RL74', {
-        'user_id': hashedId
-    });
+  gtag('set', 'user_properties', {
+    'user_id': hashedId
+});
+gtag('config', 'G-PQJTN8RL74');
     fireGtag('interview_start', {
         'interview_type': selectedInterviewType,
         'user_id': hashedId
