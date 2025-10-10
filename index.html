@@ -8,11 +8,13 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-PQJTN8RL74');
-gtag('config', 'G-PQJTN8RL74', {
-    send_page_view: false,
-    debug_mode: true
-});
+	 // Force debug mode globally
+  gtag('set', 'debug_mode', true);
+	
+  // Your GA4 config
+  gtag('config', 'G-PQJTN8RL74', {
+      send_page_view: false
+  });
 </script>
 
 	<script>
