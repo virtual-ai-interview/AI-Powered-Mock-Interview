@@ -929,7 +929,13 @@ function resetIdleTimer() {
 function handleIdleTimeout() {
     if (!interviewStarted) return;
     
+    interviewStarted = false;
+    
     clearInterval(timerInterval);
+    if (idleTimer) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+    }
     window.speechSynthesis.cancel();
     
     addMessage('<strong>⏰ You\'ve been idle for 5 minutes</strong><br>The interview has been paused.', false);
@@ -941,11 +947,10 @@ function handleIdleTimeout() {
     if (sendBtn) sendBtn.disabled = true;
     if (micBtn) micBtn.disabled = true;
     
-    showFeedbackOptions('idle');
-    
-    setTimeout(() => {
-        sendMessage("END", true);
-    }, 5000);
+    const existingFeedback = document.querySelector('.feedback-section');
+    if (!existingFeedback) {
+        showFeedbackOptions('idle');
+    }
 }
 
 async function showFeedbackOptions(reason) {
@@ -1074,18 +1079,22 @@ async function submitQuickFeedback(option, reason) {
             
             timeRemaining--;
             
-            if (timeRemaining <= 0) {
-                clearInterval(timerInterval);
-                
-                addMessage('<strong>⏰ Time is up!</strong><br>Generating your feedback and sending it to your email...');
-                document.getElementById('chatInput').style.display = 'none';
+         if (timeRemaining <= 0) {
+    clearInterval(timerInterval);
+    interviewStarted = false;
+    
+    addMessage('<strong>⏰ Time is up!</strong><br>Generating your feedback and sending it to your email...');
+    document.getElementById('chatInput').style.display = 'none';
 
-                showFeedbackOptions('timeout');
-                setTimeout(() => {
-                    sendMessage("END", true);
-                }, 5000);
-                return;
-            }
+    const existingFeedback = document.querySelector('.feedback-section');
+    if (!existingFeedback) {
+        showFeedbackOptions('timeout');
+        setTimeout(() => {
+            sendMessage("END", true);
+        }, 5000);
+    }
+    return;
+}
         }
         
         function startTimer() {
@@ -1263,8 +1272,8 @@ async function submitQuickFeedback(option, reason) {
             const mcqOptions = chatMessagesDiv.querySelectorAll('.mcq-options');
             mcqOptions.forEach(opt => opt.remove());
 
-			const feedbackSection = document.querySelector('.feedback-section');
-if (feedbackSection) feedbackSection.remove();
+			const feedbackSections = document.querySelectorAll('.feedback-section');
+feedbackSections.forEach(section => section.remove());
 			
           const intro = document.querySelector('.interview-intro');
 if (intro) intro.remove();
@@ -1617,46 +1626,52 @@ setTimeout(() => {
 }
 
                 if (data.response && data.response.includes("✅ Thanks for completing")) {
-                    const timeSpent = Math.round((Date.now() - interviewStartTime) / 1000);
+    const timeSpent = Math.round((Date.now() - interviewStartTime) / 1000);
 
-                 (async () => {
-    const hashedId = await sha256Hex(candidateEmail);
-    fireGtag('interview_complete', {
-        'interview_type': selectedInterviewType,
-        'time_spent_seconds': timeSpent,
-        'user_id': hashedId
-    });
-})();
+    (async () => {
+        const hashedId = await sha256Hex(candidateEmail);
+        fireGtag('interview_complete', {
+            'interview_type': selectedInterviewType,
+            'time_spent_seconds': timeSpent,
+            'user_id': hashedId
+        });
+    })();
 
-                    const messageInput = document.getElementById('messageInput');
-                    const sendBtn = document.getElementById('sendBtn');
-                    const micBtn = document.getElementById('micBtn');
-                    if (messageInput) messageInput.disabled = true;
-                    if (sendBtn) sendBtn.disabled = true;
-                    if (micBtn) micBtn.disabled = true;
-                    document.querySelector(".end-instruction").textContent =
-                        "Interview has ended. Check your email for feedback ✅";
-                    
-                    const userEndedEarly = timeRemaining > 60;
-                    if (userEndedEarly) {
-                        setTimeout(() => {
-                            showFeedbackOptions('user_ended');
-                        }, 1000);
-                    } else {
-                        setTimeout(() => {
-                            const feedbackDiv = document.createElement('div');
-                            feedbackDiv.className = 'feedback-section';
-                            feedbackDiv.innerHTML = `
-                                <h4>📝 Help Us Improve</h4>
-                                <p>Your feedback is valuable! Share your experience (optional) or go back to select another interview type</p>
-                                <textarea id="feedbackText" class="feedback-textarea" placeholder="Tell us about your interview experience, any issues you faced, or suggestions for improvement..."></textarea>
-                                <button id="feedbackSubmitBtn" class="feedback-submit-btn" onclick="submitFeedback()">Submit Feedback</button>
-                            `;
-                            document.getElementById('chatMessages').appendChild(feedbackDiv);
-                            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-                        }, 1000);
-                    }
-                }
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+    if (messageInput) messageInput.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    if (micBtn) micBtn.disabled = true;
+    document.querySelector(".end-instruction").textContent =
+        "Interview has ended. Check your email for feedback ✅";
+    
+    const existingFeedback = document.querySelector('.feedback-section');
+    if (!existingFeedback) {
+        const userEndedEarly = timeRemaining > 60;
+        if (userEndedEarly) {
+        setTimeout(() => {
+    const stillNoFeedback = document.querySelector('.feedback-section');
+    if (!stillNoFeedback) {
+        showFeedbackOptions('user_ended');
+    }
+}, 1000);
+        } else {
+            setTimeout(() => {
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'feedback-section';
+                feedbackDiv.innerHTML = `
+                    <h4>📝 Help Us Improve</h4>
+                    <p>Your feedback is valuable! Share your experience (optional) or go back to select another interview type</p>
+                    <textarea id="feedbackText" class="feedback-textarea" placeholder="Tell us about your interview experience, any issues you faced, or suggestions for improvement..."></textarea>
+                    <button id="feedbackSubmitBtn" class="feedback-submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+                `;
+                document.getElementById('chatMessages').appendChild(feedbackDiv);
+                document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+            }, 1000);
+        }
+    }
+}
                 
             } catch (error) {
                 hideTypingIndicator();
