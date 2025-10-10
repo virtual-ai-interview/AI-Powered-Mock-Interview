@@ -661,6 +661,30 @@ async function sha256Hex(text) {
     opacity: 0.6;
     cursor: not-allowed;
 }
+		.feedback-option-btn {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border: 2px solid #d1d5db;
+    padding: 14px 18px;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+    width: 100%;
+}
+
+.feedback-option-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border-color: #6366f1;
+    transform: translateY(-2px);
+}
+
+.feedback-option-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 		
         .recording-status {
             display: none;
@@ -865,6 +889,9 @@ async function sha256Hex(text) {
         let audioEnabled = true;
         let currentAudio = null;
         
+        let idleTimer = null;
+        let lastActivityTime = Date.now();
+        
         sessionId = 'tech_interview_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         console.log("🔧 Session ID:", sessionId);
 
@@ -885,6 +912,89 @@ if (window.speechSynthesis.getVoices().length === 0) {
     window.speechSynthesis.addEventListener('voiceschanged', initializeVoice);
 } else {
     initializeVoice();
+}
+
+function resetIdleTimer() {
+    lastActivityTime = Date.now();
+    if (idleTimer) {
+        clearTimeout(idleTimer);
+    }
+    if (interviewStarted) {
+        idleTimer = setTimeout(() => {
+            handleIdleTimeout();
+        }, 300000); // 5 minutes
+    }
+}
+
+function handleIdleTimeout() {
+    if (!interviewStarted) return;
+    
+    clearInterval(timerInterval);
+    window.speechSynthesis.cancel();
+    
+    addMessage('<strong>⏰ You\'ve been idle for 5 minutes</strong><br>The interview has been paused.', false);
+    
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+    if (messageInput) messageInput.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    if (micBtn) micBtn.disabled = true;
+    
+    showFeedbackOptions('idle');
+    
+    setTimeout(() => {
+        sendMessage("END", true);
+    }, 5000);
+}
+
+async function showFeedbackOptions(reason) {
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = 'feedback-section';
+    feedbackDiv.innerHTML = `
+        <h4>📝 Quick Feedback</h4>
+        <p>We noticed you ended the interview early. Could you tell us why?</p>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin: 16px 0;">
+            <button class="feedback-option-btn" onclick="submitQuickFeedback('too_hard', '${reason}')">😰 It's too hard</button>
+            <button class="feedback-option-btn" onclick="submitQuickFeedback('no_time', '${reason}')">⏰ I don't have time right now</button>
+            <button class="feedback-option-btn" onclick="submitQuickFeedback('need_prep', '${reason}')">📚 I want to prepare more and come back</button>
+            <button class="feedback-option-btn" onclick="submitQuickFeedback('dont_like', '${reason}')">👎 I don't like it</button>
+        </div>
+    `;
+    document.getElementById('chatMessages').appendChild(feedbackDiv);
+    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+}
+
+async function submitQuickFeedback(option, reason) {
+    const buttons = document.querySelectorAll('.feedback-option-btn');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    const payload = {
+        sessionId: sessionId,
+        candidateEmail: candidateEmail,
+        interviewType: selectedInterviewType,
+        feedbackOption: option,
+        exitReason: reason,
+        timestamp: new Date().toISOString()
+    };
+    
+    try {
+        await fetch(FEEDBACK_URL, {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const feedbackSection = document.querySelector('.feedback-section');
+        if (feedbackSection) {
+            feedbackSection.innerHTML = '<h4>✅ Thank you for your feedback!</h4><p>We hope to see you again soon.</p>';
+        }
+    } catch (error) {
+        console.error('Error submitting quick feedback:', error);
+    }
 }
 		
         function showInterviewTypes() {
@@ -960,7 +1070,10 @@ if (window.speechSynthesis.getVoices().length === 0) {
                 addMessage('<strong>⏰ Time is up!</strong><br>Generating your feedback and sending it to your email...');
                 document.getElementById('chatInput').style.display = 'none';
 
-                sendMessage("END", true);
+                showFeedbackOptions('timeout');
+                setTimeout(() => {
+                    sendMessage("END", true);
+                }, 5000);
                 return;
             }
         }
@@ -1117,6 +1230,11 @@ if (window.speechSynthesis.getVoices().length === 0) {
         'user_id': hashedId
     });
 })();
+            }
+
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+                idleTimer = null;
             }
 
 			window.speechSynthesis.cancel();
@@ -1303,6 +1421,8 @@ if (selectedInterviewType !== 'warmup') {
 }
 interviewStarted = true;
 
+resetIdleTimer();
+
 setTimeout(() => {
     const messageInput = document.getElementById('messageInput');
     if (messageInput) {
@@ -1346,6 +1466,8 @@ setTimeout(() => {
 		
         async function sendMessage(forcedMessage = null, systemTriggered = false) {
             if (!interviewStarted) return;
+
+            resetIdleTimer();
 
             const messageInput = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
@@ -1504,18 +1626,26 @@ setTimeout(() => {
                     if (micBtn) micBtn.disabled = true;
                     document.querySelector(".end-instruction").textContent =
                         "Interview has ended. Check your email for feedback ✅";
-					 setTimeout(() => {
-        const feedbackDiv = document.createElement('div');
-        feedbackDiv.className = 'feedback-section';
-        feedbackDiv.innerHTML = `
-            <h4>📝 Help Us Improve</h4>
-            <p>Your feedback is valuable! Share your experience (optional) or go back to select another interview type</p>
-            <textarea id="feedbackText" class="feedback-textarea" placeholder="Tell us about your interview experience, any issues you faced, or suggestions for improvement..."></textarea>
-            <button id="feedbackSubmitBtn" class="feedback-submit-btn" onclick="submitFeedback()">Submit Feedback</button>
-        `;
-        document.getElementById('chatMessages').appendChild(feedbackDiv);
-        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-    }, 1000);
+                    
+                    const userEndedEarly = timeRemaining > 60;
+                    if (userEndedEarly) {
+                        setTimeout(() => {
+                            showFeedbackOptions('user_ended');
+                        }, 1000);
+                    } else {
+                        setTimeout(() => {
+                            const feedbackDiv = document.createElement('div');
+                            feedbackDiv.className = 'feedback-section';
+                            feedbackDiv.innerHTML = `
+                                <h4>📝 Help Us Improve</h4>
+                                <p>Your feedback is valuable! Share your experience (optional) or go back to select another interview type</p>
+                                <textarea id="feedbackText" class="feedback-textarea" placeholder="Tell us about your interview experience, any issues you faced, or suggestions for improvement..."></textarea>
+                                <button id="feedbackSubmitBtn" class="feedback-submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+                            `;
+                            document.getElementById('chatMessages').appendChild(feedbackDiv);
+                            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                        }, 1000);
+                    }
                 }
                 
             } catch (error) {
@@ -1541,6 +1671,8 @@ setTimeout(() => {
         async function toggleRecording() {
             if (!interviewStarted) return;
             
+            resetIdleTimer();
+            
             if (!isRecording) {
                 await startRecording();
             } else {
@@ -1558,8 +1690,7 @@ let accumulatedTranscript = '';
             return;
         }
         
-        const SpeechRecognition = window
-			   .SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         
         if (!recognitionInstance) {
             recognitionInstance = new SpeechRecognition();
@@ -1693,11 +1824,15 @@ let accumulatedTranscript = '';
         const messageInput = document.getElementById('messageInput');
         if (messageInput) {
             messageInput.addEventListener('keypress', function(e) {
+                resetIdleTimer();
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
                 }
             });
+            
+            messageInput.addEventListener('input', resetIdleTimer);
+            messageInput.addEventListener('focus', resetIdleTimer);
         }
         
         const resumeFileInput = document.getElementById('resumeFile');
@@ -1767,13 +1902,10 @@ let accumulatedTranscript = '';
         });
 
         console.log("🔧 Frontend initialized. API Base:", API_BASE);
-			document.addEventListener('DOMContentLoaded', () => {
+		document.addEventListener('DOMContentLoaded', () => {
     initializeVoice();
 });
 		
     </script>
-
-
-	
 </body>
-</html>
+	</html>
